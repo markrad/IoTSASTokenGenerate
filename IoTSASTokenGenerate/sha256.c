@@ -87,14 +87,14 @@ pad(struct sha256 *s)
 	}
 	memset(s->buf + r, 0, 56 - r);
 	s->len *= 8;
-	s->buf[56] = s->len >> 56;
-	s->buf[57] = s->len >> 48;
-	s->buf[58] = s->len >> 40;
-	s->buf[59] = s->len >> 32;
-	s->buf[60] = s->len >> 24;
-	s->buf[61] = s->len >> 16;
-	s->buf[62] = s->len >> 8;
-	s->buf[63] = s->len;
+	s->buf[56] = (uint8_t) (s->len >> 56);
+	s->buf[57] = (uint8_t)(s->len >> 48);
+	s->buf[58] = (uint8_t)(s->len >> 40);
+	s->buf[59] = (uint8_t)(s->len >> 32);
+	s->buf[60] = (uint8_t)(s->len >> 24);
+	s->buf[61] = (uint8_t)(s->len >> 16);
+	s->buf[62] = (uint8_t)(s->len >> 8);
+	s->buf[63] = (uint8_t)(s->len);
 	processblock(s, s->buf);
 }
 

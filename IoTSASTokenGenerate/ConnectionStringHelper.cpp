@@ -198,7 +198,13 @@ string ConnectionStringHelper::generatePassword(int32_t tokenTTL)
 	keyLen = decodeBase64(getKeywordValue("SharedAccessKey"), NULL, 0);
 	key = new uint8_t[keyLen];
 	keyLen = decodeBase64(getKeywordValue("SharedAccessKey"), key, keyLen);
-  
+
+#ifdef _DEBUG
+	printf("Decoded SharedAccessKey\r\n");
+	dumpBuffer(key, keyLen);
+	printf("\r\n");
+#endif
+
 	string password = hashIt(toSign, key, keyLen);
 
 	delete [] key;
@@ -239,5 +245,37 @@ int ConnectionStringHelper::findTokens(const std::string connectionString)
 	}
 
 	return itemCount;
+}
+//
+// Dumps the buffer in hex and character
+void ConnectionStringHelper::dumpBuffer(uint8_t *buffer, uint32_t bufferLength)
+{
+	for (uint8_t i = 0; i < bufferLength; i += 16)
+	{
+		printf("%08x  ", i);
+
+		int j;
+		uint8_t chunk = (bufferLength - i < 16) ? bufferLength - i : 16;
+
+		for (j = i; j < i + chunk; j++)
+		{
+			printf(" %02x", buffer[j]);
+		}
+
+		printf("  ");
+
+		if (chunk < 16)
+		{
+			for (j = chunk; j < 16; j++)
+				printf("   ");
+		}
+
+		for (j = i; j < i + chunk; j++)
+		{
+			printf("%c", (isprint(buffer[j])) ? buffer[j] : '.');
+		}
+
+		printf("\r\n");
+	}
 }
 

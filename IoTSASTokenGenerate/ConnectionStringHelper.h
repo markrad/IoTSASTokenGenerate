@@ -17,6 +17,7 @@ private:
 
 	int findTokens(const std::string connectionString);
 	string hashIt(const string data, uint8_t *key, size_t keyLength);
+	static void dumpBuffer(uint8_t *buffer, uint32_t bufferLength);
 
 public:
 	static string urlEncode(const string url);
