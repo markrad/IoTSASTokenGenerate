@@ -1,10 +1,23 @@
 #pragma once
 
-#include <string>
-#include <map>
+typedef struct _CONNECTIONSTRINGSTRUCT
+{
+	int tokenCount;
+	char** keywords;
+	char** values;
+} CONNECTIONSTRINGSTRUCT, *CONNECTIONSTRINGHANDLE;
 
-using namespace std;
+CONNECTIONSTRINGHANDLE CreateConnectionStringHandle(const char* connectionString);
+const char* GetKeywordValue(CONNECTIONSTRINGHANDLE, const char* keyword);
+int DestroyConnectionStringHandle(CONNECTIONSTRINGHANDLE hcs);
 
+int urlEncode(const char* urlIn, char* urlOut, int urlOutLen);
+int encodeBase64(const char* input, int inputLength, char* output, int outputLength);
+int decodeBase64(const char* input, char* output, int outputLength);
+int generatePassword(CONNECTIONSTRINGHANDLE h, long tokenTTL, char* output, int outputLen);
+
+
+/*
 class ConnectionStringHelper
 {
 private:
@@ -32,3 +45,4 @@ public:
 	const std::string getKeywordValue(const std::string keyword);
 	string generatePassword(int32_t tokenTTL);
 };
+*/

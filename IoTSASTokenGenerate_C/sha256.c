@@ -1,6 +1,4 @@
 /* public domain sha256 implementation based on fips180-3 */
-#include "stdafx.h"
-
 #include <stdint.h>
 #include <string.h>
 

@@ -6,6 +6,8 @@
 #include "sha256.h"
 #include "ConnectionStringHelper.h"
 
+//#define _TESTING
+
 const std::string ConnectionStringHelper::CODES = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 
 /*
@@ -120,14 +122,14 @@ string ConnectionStringHelper::encodeBase64(const uint8_t *input, int inputLengt
 
 //
 // Decodes from Base64
-int ConnectionStringHelper::decodeBase64(const string input, uint8_t *output, uint32_t outputLength)
+size_t ConnectionStringHelper::decodeBase64(const string input, uint8_t *output, size_t outputLength)
 {
-	int b[4];
+	size_t b[4];
 
 	if (input.length() % 4 != 0)
 		return -1;    // Base64 string's length must be a multiple of 4
     
-	uint32_t requiredLen = (input.length() * 3) / 4 - (input.find('=') != string::npos ? (input.length() - input.find('=')) : 0);
+	size_t requiredLen = (input.length() * 3) / 4 - (input.find('=') != string::npos ? (input.length() - input.find('=')) : 0);
 
 	if (outputLength == 0 || output == NULL)
 		return requiredLen;
@@ -137,22 +139,22 @@ int ConnectionStringHelper::decodeBase64(const string input, uint8_t *output, ui
 
 	int j = 0;
 
-	for (uint32_t i = 0; i < input.length(); i += 4)
+	for (size_t i = 0; i < input.length(); i += 4)
 	{
 		b[0] = CODES.find(input[i]);
 		b[1] = CODES.find(input[i + 1]);
 		b[2] = CODES.find(input[i + 2]);
 		b[3] = CODES.find(input[i + 3]);
 
-		output[j++] = ((b[0] << 2) | (b[1] >> 4));
+		output[j++] = (uint8_t)(((b[0] << 2) | (b[1] >> 4)));
 
 		if (b[2] < 64)
 		{
-			output[j++] = ((b[1] << 4) | (b[2] >> 2));
+			output[j++] = (uint8_t)(((b[1] << 4) | (b[2] >> 2)));
       
 			if (b[3] < 64)  
 			{
-				output[j++] = ((b[2] << 6) | b[3]);
+				output[j++] = (uint8_t)(((b[2] << 6) | b[3]));
 			}
 		}
 	}
@@ -178,7 +180,11 @@ string ConnectionStringHelper::hashIt(const string data, uint8_t *key, size_t ke
 string ConnectionStringHelper::generatePassword(int32_t tokenTTL)
 {
 	string uri;
-	int32_t epoch = (int32_t) time(0);
+#ifdef _TESTING
+	int32_t epoch = 0;
+#else
+	int32_t epoch = (int32_t)time(0);
+#endif
 	int32_t tokenExpiry = epoch + tokenTTL;
 
 #ifdef _DEBUG
@@ -193,7 +199,7 @@ string ConnectionStringHelper::generatePassword(int32_t tokenTTL)
 
 	string toSign = uri + "\n" + to_string(tokenExpiry);
 	uint8_t *key;
-	int keyLen;
+	size_t keyLen;
 
 	keyLen = decodeBase64(getKeywordValue("SharedAccessKey"), NULL, 0);
 	key = new uint8_t[keyLen];
@@ -246,16 +252,17 @@ int ConnectionStringHelper::findTokens(const std::string connectionString)
 
 	return itemCount;
 }
+#ifdef _DEBUG
 //
 // Dumps the buffer in hex and character
-void ConnectionStringHelper::dumpBuffer(uint8_t *buffer, uint32_t bufferLength)
+void ConnectionStringHelper::dumpBuffer(uint8_t *buffer, size_t bufferLength)
 {
 	for (uint8_t i = 0; i < bufferLength; i += 16)
 	{
 		printf("%08x  ", i);
 
 		int j;
-		uint8_t chunk = (bufferLength - i < 16) ? bufferLength - i : 16;
+		uint8_t chunk = (uint8_t)((bufferLength - i < 16) ? bufferLength - i : 16);
 
 		for (j = i; j < i + chunk; j++)
 		{
@@ -278,4 +285,5 @@ void ConnectionStringHelper::dumpBuffer(uint8_t *buffer, uint32_t bufferLength)
 		printf("\r\n");
 	}
 }
+#endif
 
