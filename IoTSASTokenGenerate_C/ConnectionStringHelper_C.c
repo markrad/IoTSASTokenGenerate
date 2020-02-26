@@ -381,7 +381,7 @@ int generatePassword(CONNECTIONSTRINGHANDLE h, long tokenTTL, char* output, int 
 	if ((snprintf(tokenExpiryStr, sizeof(tokenExpiryStr), "%d", tokenExpiry)) > sizeof(tokenExpiryStr))
 		return -1;
 
-	int uriLen = 1 + strlen(GetKeywordValue(h, "hostname")) + strlen("/devices/") + strlen(GetKeywordValue(h, "deviceid"));
+	size_t uriLen = 1 + strlen(GetKeywordValue(h, "hostname")) + strlen("/devices/") + strlen(GetKeywordValue(h, "deviceid"));
 	int encodedUriLen;
 
 	uri = (char*)malloc(uriLen);
@@ -389,7 +389,7 @@ int generatePassword(CONNECTIONSTRINGHANDLE h, long tokenTTL, char* output, int 
 	if (uri == NULL)
 		return -1;
 
-	sprintf_s(uri, uriLen, "%s/devices/%s", GetKeywordValue(h, "hostname"), GetKeywordValue(h, "deviceid"));
+	snprintf(uri, uriLen, "%s/devices/%s", GetKeywordValue(h, "hostname"), GetKeywordValue(h, "deviceid"));
 
 #ifdef _DEBUG
 	printf("URL to encode >%s<\r\n", uri);
@@ -409,16 +409,16 @@ int generatePassword(CONNECTIONSTRINGHANDLE h, long tokenTTL, char* output, int 
 
 	free(uri);
 
-	int toSignLen = strlen(encodedUri) + 2 + strlen(tokenExpiryStr) + 1;
+	size_t toSignLen = strlen(encodedUri) + 2 + strlen(tokenExpiryStr) + 1;
 	char* toSign = (char*)malloc(toSignLen);
 
 	if (toSign == NULL)
 		return -1;
 
-	sprintf_s(toSign, toSignLen, "%s\n%s", encodedUri, tokenExpiryStr);
+	snprintf(toSign, toSignLen, "%s\n%s", encodedUri, tokenExpiryStr);
 
 	char* key;
-	size_t keyLen;
+	int keyLen;
 
 	keyLen = decodeBase64(GetKeywordValue(h, "SharedAccessKey"), NULL, 0);
 	key = (char*)malloc(keyLen);
@@ -442,17 +442,17 @@ int generatePassword(CONNECTIONSTRINGHANDLE h, long tokenTTL, char* output, int 
 	hashIt(toSign, key, keyLen, password, passwordLen);
 	free(key);
 
-	int resultLen = strlen("SharedAccessSignature sr=") + strlen(encodedUri) + strlen("&sig=") + strlen(password) + strlen("&se=") + strlen(tokenExpiryStr) + 1;
+	size_t resultLen = strlen("SharedAccessSignature sr=") + strlen(encodedUri) + strlen("&sig=") + strlen(password) + strlen("&se=") + strlen(tokenExpiryStr) + 1;
 
 	if (output != NULL && outputLen >= resultLen)
 	{
-		if ((sprintf_s(output, outputLen, "SharedAccessSignature sr=%s&sig=%s&se=%s", encodedUri, password, tokenExpiryStr)) == -1)
+		if ((snprintf(output, outputLen, "SharedAccessSignature sr=%s&sig=%s&se=%s", encodedUri, password, tokenExpiryStr) + 1) > outputLen)
 			return -1;	// This should never happen
 	}
 
 	free(encodedUri);
 
-	return resultLen;
+	return (int)resultLen;
 }
 
 ////
