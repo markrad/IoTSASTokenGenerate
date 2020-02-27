@@ -23,32 +23,6 @@ int main(int argc, char** argv)
 	printf("DeviceId = %s\r\n", GetKeywordValue(csh, "DEVICEID"));
 	printf("SharedAccessKey = %s\r\n", GetKeywordValue(csh, "SharedAccessKey"));
 
-	int count = urlEncode("https://markradhub2.azure-devices.net/JavaTest1/", NULL, 0);
-
-	char* test = (char*)malloc(count);
-
-	int count2 = urlEncode("https://markradhub2.azure-devices.net/JavaTest1/", test, count);
-
-	printf("%s\r\n", test);
-
-	free(test);
-
-	char* input = "Now is the time for all good men to come to the aid of the party";
-
-	count = encodeBase64(input, strlen(input), NULL, 0);
-	test = (char*)malloc(count);
-	count2 = encodeBase64(input, strlen(input), test, count);
-
-	printf("%s\r\n", test);
-
-	count = strlen(input);
-	char* decode = (char*)malloc(count + 1);
-	count2 = decodeBase64(test, decode, count);
-	decode[count] = '\0';
-	printf("%s\r\n", decode);
-	free(decode);
-	free(test);
-
 	char* password = NULL;
 	int passwordLen;
 	int saveLen = 0;
