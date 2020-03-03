@@ -69,8 +69,15 @@ CONNECTIONSTRINGHANDLE CreateConnectionStringHandle(const char* connectionString
 				break;
 			}
 
-			h->keywords[tokenCount] = (char*)malloc(++valueStart - keywordStart);
-			h->keywords[tokenCount][valueStart - keywordStart - 1] = '\0';
+			*(h->keywords + tokenCount) = (char*)malloc((size_t)(++valueStart - keywordStart));
+
+			if (*(h->keywords + tokenCount) == NULL)
+			{
+				errorFound = true;
+				break;
+			}
+
+			h->keywords[tokenCount][(size_t)(valueStart - keywordStart - 1)] = (char)'\0';
 
 			for (int i = 0; i < valueStart - keywordStart - 1; i++)
 			{
@@ -85,9 +92,16 @@ CONNECTIONSTRINGHANDLE CreateConnectionStringHandle(const char* connectionString
 				run = false;
 			}
 
-			h->values[tokenCount] = (char*)malloc(valueEnd - valueStart + 1);
-			h->values[tokenCount][valueEnd - valueStart] = '\0';
-			memcpy(h->values[tokenCount], valueStart, valueEnd - valueStart);
+			*(h->values + tokenCount) = (char*)malloc((size_t)(valueEnd - valueStart + 1));
+
+			if (*(h->values + tokenCount) == NULL)
+			{
+				errorFound = true;
+				break;
+			}
+
+			h->values[tokenCount][(size_t)(valueEnd - valueStart)] = (char)'\0';
+			memcpy(*(h->values + tokenCount), valueStart, (size_t)(valueEnd - valueStart));
 			tokenCount++;
 
 			if (*valueEnd)
