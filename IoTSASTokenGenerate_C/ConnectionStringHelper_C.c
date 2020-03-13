@@ -116,7 +116,9 @@ CONNECTIONSTRINGHANDLE CreateConnectionStringHandle(const char* connectionString
 			free(h->keywords[i]);
 			free(h->values[i]);
 		}
-
+		
+		free(h->keywords);
+		free(h->values);
 		free(h);
 		h = NULL;
 	}
@@ -146,6 +148,8 @@ int DestroyConnectionStringHandle(CONNECTIONSTRINGHANDLE h)
 			free(h->values[i]);
 		}
 
+		free(h->keywords);
+		free(h->values);
 		free(h);
 	}
 
@@ -413,7 +417,10 @@ int generatePassword(CONNECTIONSTRINGHANDLE h, long tokenTTL, char* output, int 
 	encodedUri = (char*)malloc(encodedUriLen);
 
 	if (encodedUri == NULL)
+	{
+		free(uri);
 		return -1;
+	}
 
 	urlEncode(uri, encodedUri, encodedUriLen);
 
@@ -427,7 +434,10 @@ int generatePassword(CONNECTIONSTRINGHANDLE h, long tokenTTL, char* output, int 
 	char* toSign = (char*)malloc(toSignLen);
 
 	if (toSign == NULL)
+	{
+		free(encodedUri);
 		return -1;
+	}
 
 	snprintf(toSign, toSignLen, "%s\n%s", encodedUri, tokenExpiryStr);
 
@@ -451,10 +461,16 @@ int generatePassword(CONNECTIONSTRINGHANDLE h, long tokenTTL, char* output, int 
 	password = (char*)malloc(passwordLen);
 
 	if (password == NULL)
+	{
+		free(encodedUri);
+		free(toSign);
+		free(key);
 		return -1;
+	}
 
 	hashIt(toSign, key, keyLen, password, passwordLen);
 	free(key);
+	free(toSign);
 
 	size_t resultLen = strlen("SharedAccessSignature sr=") + strlen(encodedUri) + strlen("&sig=") + strlen(password) + strlen("&se=") + strlen(tokenExpiryStr) + 1;
 
@@ -465,6 +481,7 @@ int generatePassword(CONNECTIONSTRINGHANDLE h, long tokenTTL, char* output, int 
 	}
 
 	free(encodedUri);
+	free(password);
 
 	return (int)resultLen;
 }
