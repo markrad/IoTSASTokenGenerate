@@ -1,8 +1,8 @@
-#include <memory.h>
 #include <stdbool.h>
 
 #ifdef _DEBUG_HEAP
 #include <stdio.h>
+#include <memory.h>
 #endif
 
 #include "heap.h"
@@ -21,12 +21,18 @@ void heapInsertAfter(HEAPHANDLE hHeap, MEMORYBLOCK target, MEMORYBLOCK newItem);
 void heapRemoveFromList(HEAPHANDLE hHeap, MEMORYBLOCK mb);
 int heapGetIsAdjacent(MEMORYBLOCK first, MEMORYBLOCK second);
 
+#ifdef _DEBUG_HEAP
+void heapSanity(HEAPHANDLE hHeap);
+#endif
+
 HEAPHANDLE heapInit(uint8_t *buffer, size_t bufferLen)
 {
 	if (buffer == NULL || bufferLen < 2048 || bufferLen > UINT16_MAX)
 		return NULL;
 
+#ifdef _DEBUG_HEAP
 	memset(buffer, 0xee, bufferLen);
+#endif
 
 	HEAPHANDLE hHeap = (HEAPHANDLE)buffer;
 
@@ -123,9 +129,10 @@ void heapFree(HEAPHANDLE hHeap, void* address)
 		return;
 
 	heapRemoveFromList(hHeap, mb);
+
+#ifdef _DEBUG_HEAP
 	memset(heapGetData(mb), 0xee, mb->length);
 
-#ifdef _DEBUGX
 	printf("check\r\n");
 	heapSanity(hHeap);
 	heapRemoveFromList(hHeap, mb);
@@ -171,6 +178,7 @@ void heapFree(HEAPHANDLE hHeap, void* address)
 #endif
 }
 
+#ifdef _DEBUG_HEAP
 void heapSanity(HEAPHANDLE hHeap)
 {
 	MEMORYBLOCK mb;
@@ -210,20 +218,21 @@ void heapSanity(HEAPHANDLE hHeap)
 	printf("         used bytes = %05d\n", usedBytes);
 	printf(" largest free block = %05d\n", largestFree);
 }
+#endif
 
-uint16_t heapGetOffset(HEAPHANDLE hHeap, MEMORYBLOCK mb)
+inline uint16_t heapGetOffset(HEAPHANDLE hHeap, MEMORYBLOCK mb)
 {
 	return (uint16_t)((uint8_t *)mb - (uint8_t *)hHeap);
 }
 
-MEMORYBLOCK heapGetNextAddress(HEAPHANDLE hHead, MEMORYBLOCK mb)
+inline MEMORYBLOCK heapGetNextAddress(HEAPHANDLE hHead, MEMORYBLOCK mb)
 {
 	return mb->next != UINT16_MAX
 		? (MEMORYBLOCK)((uint8_t *)hHead + mb->next) 
 		: NULL;
 }
 
-MEMORYBLOCK heapGetPreviousAddress(HEAPHANDLE hHead, MEMORYBLOCK mb)
+inline MEMORYBLOCK heapGetPreviousAddress(HEAPHANDLE hHead, MEMORYBLOCK mb)
 {
 	return mb->previous != UINT16_MAX
 		? (MEMORYBLOCK)((uint8_t*)hHead + mb->previous)
@@ -231,23 +240,23 @@ MEMORYBLOCK heapGetPreviousAddress(HEAPHANDLE hHead, MEMORYBLOCK mb)
 }
 
 // Returns the memory block for the specified address
-MEMORYBLOCK heapGetMB(uint8_t *address)
+inline MEMORYBLOCK heapGetMB(uint8_t *address)
 {
 	return (MEMORYBLOCK)(address - sizeof(MEMORYBLOCKSTRUCT));
 }
 
 // Returns a pointer to the data referenced by the offset
-uint8_t* heapGetData(MEMORYBLOCK mb)
+inline uint8_t* heapGetData(MEMORYBLOCK mb)
 {
 	return (uint8_t*)((uint8_t*)mb + sizeof(MEMORYBLOCKSTRUCT));
 }
 
-MEMORYBLOCK heapGetFreeList(HEAPHANDLE hHeap)
+inline MEMORYBLOCK heapGetFreeList(HEAPHANDLE hHeap)
 {
 	return &(hHeap->freeList);
 }
 
-MEMORYBLOCK heapGetUsedList(HEAPHANDLE hHeap)
+inline MEMORYBLOCK heapGetUsedList(HEAPHANDLE hHeap)
 {
 	return &(hHeap->usedList);
 }
