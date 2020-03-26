@@ -1,5 +1,5 @@
 # IoTSASTokenGenerate
-C and C++ sample programs that demonstrate how to generate a SAS Token from a device connection string in order to connect a device to an Azure IoT hub without using the Microsoft SDK.
+C and C++ sample programs that demonstrate how to generate a SAS Token from a device connection string in order to connect a device to an Azure IoT hub without using the Microsoft SDK. In addition to a regular C sample there is also a version that does not use malloc. The caller is required to pass a buffer and it will use this for all of its dynamic memory usage. This is useful for highly constrained devices where keeping a track of in use memory is imperative.
 
 When connecting to an Azure IoT hub using the standard Microsoft SDKs one only needs to provide a device connection string. 
 This string is used to create a SAS token which is subsequently used to 
