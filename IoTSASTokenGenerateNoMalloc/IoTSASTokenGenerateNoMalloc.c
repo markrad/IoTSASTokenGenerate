@@ -34,8 +34,8 @@ int main(int argc, char** argv)
 	// until it fits.
 	while (saveLen < (passwordLen = generatePassword(csh, 3600, password, saveLen)))
 	{
-		free(password);
-		password = (char*)malloc(passwordLen);
+		heapFree(csh->hHeap, password);
+		password = (char*)heapMalloc(csh->hHeap, passwordLen);
 		saveLen = passwordLen;
 	}
 
@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 	printf("MQTT server name = %s\r\n", GetKeywordValue(csh, "hostname"));
 	printf("MQTT password = %s\r\n", password);
 
-	free(password);
+	heapFree(csh->hHeap, password);
 	DestroyConnectionStringHandle(csh);
 }
 
