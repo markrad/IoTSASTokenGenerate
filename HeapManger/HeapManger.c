@@ -3,6 +3,7 @@
 #include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "../IoTSASTokenGenerateNoMalloc/heap.h"
 
@@ -10,7 +11,7 @@ int main()
 {
 	printf("Starting heap test\r\n\n");
 
-	uint8_t buffer[4096];
+	uint8_t buffer[8192];
 	HEAPHANDLE h = heapInit(buffer, sizeof(buffer));
 
 	void* p1 = heapMalloc(h, 40);
@@ -30,23 +31,29 @@ int main()
 	heapFree(h, p1);
 
 	void* ptrs[100];
+	srand((unsigned)time(NULL));
 
 	for (int i = 0; i < sizeof(ptrs) / sizeof(ptrs[0]); i++)
 	{
-		ptrs[i] = heapMalloc(h, (size_t)(rand() % 200) + 1);
+		size_t len = (size_t)(rand() % 256) + 1;
+		ptrs[i] = heapMalloc(h, len);
+
+		if (ptrs[i] != NULL)
+		{
+			printf("allocated %d bytes\n", (int)len);
+			memset(ptrs[i], 'M', len);
+		}
 	}
 
 	int freedCount = 0;
 
-	while (freedCount < sizeof(ptrs) / sizeof(ptrs[0]))
+	for (int i = 0; i < sizeof(ptrs) / sizeof(ptrs[0]); i++)
 	{
-		int index = rand() % sizeof(ptrs) / sizeof(ptrs[0]);
-
-		if (ptrs[index] != NULL)
+		if (ptrs[i] != NULL)
 		{
 			freedCount++;
-			heapFree(h, ptrs[index]);
-			ptrs[index] = NULL;
+			heapFree(h, ptrs[i]);
+			ptrs[i] = NULL;
 			printf("freed %d\n", freedCount);
 		}
 	}

@@ -10,9 +10,11 @@
 #include "sha256.h"
 #include "ConnectionStringHelper_NoMalloc.h"
 
-#define _TESTING
+//#define _TESTING
 
 static void dumpBuffer(uint8_t* buffer, size_t bufferLength);
+
+static const char* CODES = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 
 CONNECTIONSTRINGHANDLE CreateConnectionStringHandle(const char* connectionString, unsigned char* buffer, size_t bufferLength)
 {
@@ -163,6 +165,9 @@ int DestroyConnectionStringHandle(CONNECTIONSTRINGHANDLE h)
 // Return the value for a keyword in the connection string
 const char* GetKeywordValue(CONNECTIONSTRINGHANDLE h, const char* keyword)
 {
+	if (keyword == NULL)
+		return NULL;
+
 	char* work = (char*)heapMalloc(h->hHeap, strlen(keyword) + 1);
 
 	if (work == NULL)
@@ -237,8 +242,6 @@ int urlEncode(const char* urlIn, char* urlOut, int urlOutLen)
 // Encodes the input into Base64
 int encodeBase64(const char *input, int inputLength, char *output, int outputLength)
 {
-	const char* CODES = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-
 	char b;
 	int counter = 0;
 
@@ -321,8 +324,6 @@ int encodeBase64(const char *input, int inputLength, char *output, int outputLen
 // Decodes from Base64
 int decodeBase64(const char* input, char* output, int outputLength)
 {
-	static const char* CODES = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-
 	size_t b[4];
 	int inputLen = (int)strlen(input);
 
@@ -489,37 +490,6 @@ int generatePassword(CONNECTIONSTRINGHANDLE h, long tokenTTL, char* output, int 
 
 	return (int)resultLen;
 }
-
-////
-//// Private method - Build keyword value lookup map
-//int ConnectionStringHelper::findTokens(const std::string connectionString)
-//{
-//	int itemCount = 0;
-//	size_t index = 0;
-//	size_t newIndex = 0;
-//	size_t eqIndex = 0;
-//
-//	while (index < connectionString.length())
-//	{
-//		newIndex = connectionString.find(';', index);
-//
-//		if (newIndex == string::npos)
-//			newIndex = connectionString.length();
-//
-//		eqIndex = connectionString.find('=', index);
-//
-//		if (eqIndex == string::npos)
-//			return 0;
-//
-//		itemCount++;
-//		std::string keyword = connectionString.substr(index, eqIndex - index);
-//		std::transform(keyword.begin(), keyword.end(), keyword.begin(), ::tolower);
-//		keyValue.insert(std::pair<const std::string, const std::string>(keyword, connectionString.substr(eqIndex + 1, newIndex - (eqIndex + 1))));
-//		index = newIndex + 1;
-//	}
-//
-//	return itemCount;
-//}
 
 #ifdef _DEBUG
 // Dumps the buffer in hex and character
