@@ -29,12 +29,49 @@ int main()
 	p1 = heapMalloc(h, 4000);
 	p2 = heapMalloc(h, 80);
 	heapFree(h, p1);
+	heapFree(h, p2);
+
+	p1 = heapMalloc(h, 100);
+	p2 = heapMalloc(h, 200);
+	p3 = heapMalloc(h, 200);
+	heapRealloc(h, p2, 100);
+	heapFree(h, p2);
+	heapRealloc(h, p1, 20);
+	heapRealloc(h, p3, 50);
+	heapFree(h, p1);
+	heapFree(h, p3);
+	p1 = heapMalloc(h, 200);
+	p2 = heapMalloc(h, 20);
+
+	for (int i = 199; i > 180; i--)
+		heapRealloc(h, p1, i);
+
+	heapFree(h, p1);
+	heapFree(h, p2);
+
+	p1 = heapMalloc(h, 11);
+	p2 = heapMalloc(h, 4);
+
+	strcpy(p1, "0123456789");
+	printf("%s\n", (char*)p1);
+	p1 = heapRealloc(h, p1, 21);
+	printf("%s\n", (char*)p1);
+	strcat(p1, "9876543210");
+	printf("%s\n", (char*)p1);
+	p1 = heapRealloc(h, p1, 31);
+	printf("%s\n", (char*)p1);
+	strcat(p1, "9876543210");
+	printf("%s\n", (char*)p1);
+
+	heapFree(h, p2);
+	heapFree(h, p1);
 
 	void* ptrs[100];
 	srand((unsigned)time(NULL));
 
 	for (int i = 0; i < sizeof(ptrs) / sizeof(ptrs[0]); i++)
 	{
+		p1 = heapMalloc(h, (size_t)(rand() % 32) + 1);
 		size_t len = (size_t)(rand() % 256) + 1;
 		ptrs[i] = heapMalloc(h, len);
 
@@ -43,6 +80,8 @@ int main()
 			printf("allocated %d bytes\n", (int)len);
 			memset(ptrs[i], 'M', len);
 		}
+
+		heapFree(h, p1);
 	}
 
 	int freedCount = 0;
