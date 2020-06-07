@@ -2,11 +2,13 @@
 
 #ifdef _DEBUG_HEAP
 #include <stdio.h>
-#include <memory.h>
+
 #define _DEBUG_HEAP_SANITY(HEAP) (heapSanity(HEAP));
 #else
 #define _DEBUG_HEAP_SANITY(HEAP) (0)
 #endif
+
+#include <memory.h>
 
 #define MIN_ALLOC sizeof(MEMORYBLOCKSTRUCT) + 4
 #define CHAIN_END UINT16_MAX
@@ -37,8 +39,8 @@ void heapInsertIntoFreeList(HEAPHANDLE hHead, MEMORYBLOCK mb);
 void heapInsertAfter(HEAPHANDLE hHeap, MEMORYBLOCK target, MEMORYBLOCK newItem);
 void heapRemoveFromList(HEAPHANDLE hHeap, MEMORYBLOCK mb);
 int heapGetIsAdjacent(MEMORYBLOCK first, MEMORYBLOCK second);
-void* heapTruncate(HEAPHANDLE hHeap, void* address, uint16_t newLength);
-void* heapExtend(HEAPHANDLE hHeap, void* address, uint16_t newLength);
+static void* heapTruncate(HEAPHANDLE hHeap, void* address, uint16_t newLength);
+static void* heapExtend(HEAPHANDLE hHeap, void* address, uint16_t newLength);
 
 // Initialize the heap structures
 HEAPHANDLE heapInit(uint8_t *buffer, size_t bufferLen)
@@ -243,6 +245,64 @@ static void* heapTruncate(HEAPHANDLE hHeap, void* address, uint16_t newLength)
 	return result;
 }
 
+static void* heapTruncate(HEAPHANDLE hHeap, void* address, uint16_t newLength)
+{
+	void* result = NULL;
+
+	if (hHeap != NULL && address != NULL)
+	{
+		if (newLength == 0)
+		{
+			heapFree(hHeap, address);
+		}
+		else
+		{
+			if (newLength % 2 != 0)
+				newLength += 1;
+
+			MEMORYBLOCK mb = heapGetMB(address);
+
+			if (newLength == mb->length)
+			{
+				result = address;
+			}
+			else if (newLength < mb->length)
+			{
+				result = address;
+
+				MEMORYBLOCK search = heapGetNextAddress(hHeap, heapGetFreeList(hHeap));
+
+				while (search != NULL)
+				{
+					if (1 == heapGetIsAdjacent(search, mb))
+						break;
+
+					search = heapGetNextAddress(hHeap, search);
+				}
+
+				if (search != NULL || mb->length - newLength > MIN_ALLOC)
+				{
+					MEMORYBLOCK trailer = (MEMORYBLOCK)((uint8_t*)address + newLength);
+					trailer->length = mb->length - newLength - sizeof(MEMORYBLOCKSTRUCT);
+					mb->length = newLength;
+
+					if (search != NULL)
+					{
+						heapRemoveFromList(hHeap, search);
+						trailer->length += (search->length + sizeof(MEMORYBLOCKSTRUCT));
+					}
+
+					heapInsertIntoFreeList(hHeap, trailer);
+				}
+			}
+		}
+	}
+
+	_DEBUG_HEAP_SANITY(hHeap);
+
+	return result;
+}
+
 static void* heapExtend(HEAPHANDLE hHeap, void* address, uint16_t newLength)
 {
 	void* result = NULL;
@@ -302,6 +362,35 @@ static void* heapExtend(HEAPHANDLE hHeap, void* address, uint16_t newLength)
 	_DEBUG_HEAP_SANITY(hHeap);
 
 	return result;
+}
+
+void heapGetInfo(HEAPHANDLE hHeap, HEAPINFO *heapInfo)
+{
+	MEMORYBLOCK mb;
+
+	int freeBytes = 0;
+	int usedBytes = 0;
+	int totalBytes = 0;
+	int largestFree = 0;
+
+	mb = heapGetUsedList(hHeap);
+	
+	while (NULL != (mb = heapGetNextAddress(hHeap, mb)))
+	{
+		heapInfo->totalBytes += mb->length + sizeof(MEMORYBLOCKSTRUCT);
+		heapInfo->usedBytes += mb->length;
+	}
+
+	mb = heapGetFreeList(hHeap);
+
+	while (NULL != (mb = heapGetNextAddress(hHeap, mb)))
+	{
+		heapInfo->totalBytes += mb->length + sizeof(MEMORYBLOCKSTRUCT);
+		heapInfo->freeBytes += mb->length;
+
+		if (mb->length > heapInfo->largestFree)
+			heapInfo->largestFree = mb->length;
+	}
 }
 
 #ifdef _DEBUG_HEAP
